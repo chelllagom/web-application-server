@@ -9,10 +9,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import model.User;
 import util.HttpRequestUtils;
 
 public class RequestHandler extends Thread {
@@ -38,8 +40,22 @@ public class RequestHandler extends Thread {
         	//path 추출
         	String url = HttpRequestUtils.getUrl(line);
         	
+        	if(url.startsWith("/create")) {
+        		//?앞까지
+        		int index = url.indexOf("?");
+        		//String requestPath = url.substring(0, index);
+        		String queryString = url.substring(index+1);
+        		//NameValueCollection 인코딩을 사용하여 쿼리 문자열을 UTF8 으로 구문 분석합니다.
+        		Map<String, String> params = HttpRequestUtils.parseQueryString(queryString);
+        		User user = new User(params.get("userId"), params.get("password"), params.get("name"), params.get("email"));
+        		log.debug("User : {}", user);
+        		url = "/index.html";
+        	}
+        	
+        	//https://www.youtube.com/watch?v=ioOGE8qTa94
+        	
         	DataOutputStream dos = new DataOutputStream(out);
-        	// ./webapp+/index.html 전부 byte로 읽음
+        	//./webapp+/index.html 전부 byte로 읽음
             byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
             response200Header(dos, body.length);
             responseBody(dos, body);
